@@ -23,9 +23,7 @@ export default function InsightsScreen() {
   const { habits } = useHabits();
 
   // Activity Map: aggregate all habits' dates -> count per day (entire last year)
-  // #region agent log
   const ACTIVITY_MAP_NUM_DAYS = 365;
-  // #endregion
   const lastYearDates = getLastNDays(ACTIVITY_MAP_NUM_DAYS);
   const countByDate: Record<string, number> = {};
   lastYearDates.forEach((d) => (countByDate[d] = 0));
@@ -40,29 +38,6 @@ export default function InsightsScreen() {
   // Min width for 365 days: 52 full columns of 7 days, squareSize 12 + gutter 2
   const chartMinWidth = 52 * (12 + 2) - 2;
   const chartWidth = Math.max(screenWidth - Theme.spacing * 2, chartMinWidth);
-  // #region agent log
-  fetch("http://127.0.0.1:7245/ingest/8ace6662-24cf-48f6-92da-52c377476490", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      location: "two.tsx:ActivityMap",
-      message: "Activity Map data range",
-      data: {
-        numDays: ACTIVITY_MAP_NUM_DAYS,
-        lastDatesLength: lastYearDates.length,
-        contributionDataLength: contributionData.length,
-        firstDate: contributionData[0]?.date,
-        lastDate: contributionData[contributionData.length - 1]?.date,
-        chartWidth,
-        chartHeight: 140,
-      },
-      timestamp: Date.now(),
-      sessionId: "debug-session",
-      runId: "post-fix",
-      hypothesisId: "A",
-    }),
-  }).catch(() => {});
-  // #endregion
 
   // Weekly Focus: current week completion across all habits
   const weekDates = getCurrentWeekDates();
