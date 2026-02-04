@@ -32,10 +32,20 @@ export default function AddHabitModal() {
     <View
       style={[
         styles.container,
-        { paddingBottom: insets.bottom + Theme.spacing },
+        {
+          paddingBottom: insets.bottom + Theme.spacing,
+          paddingTop: insets.top,
+        },
       ]}
     >
       <View style={styles.sheet}>
+        <Pressable
+          hitSlop={12}
+          onPress={() => router.back()}
+          style={styles.closeBtn}
+        >
+          <Text style={styles.closeBtnText}>✕</Text>
+        </Pressable>
         <Text style={styles.title}>New Habit</Text>
         <TextInput
           style={styles.input}
@@ -63,22 +73,40 @@ export default function AddHabitModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: "transparent",
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: Theme.colors.card,
+    backgroundColor: "rgba(255,255,255,0.92)",
     borderTopLeftRadius: Theme.radius.card,
     borderTopRightRadius: Theme.radius.card,
     padding: Theme.spacing,
     borderWidth: 1,
     borderBottomWidth: 0,
-    borderColor: Theme.colors.cardBorder,
+    borderColor: "rgba(0,0,0,0.06)",
+  },
+  closeBtn: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.06)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  closeBtnText: {
+    fontSize: 18,
+    color: Theme.colors.textPrimary,
+    fontWeight: "600",
   },
   title: {
     ...Theme.typography.heading,
     color: Theme.colors.textPrimary,
     marginBottom: Theme.spacing,
+    paddingRight: 40,
   },
   input: {
     borderWidth: 1,

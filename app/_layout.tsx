@@ -58,7 +58,14 @@ function RootLayoutNav() {
       <HabitsProvider>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+          <Stack.Screen
+            name="modal"
+            options={{
+              presentation: "transparentModal",
+              headerShown: false,
+              gestureEnabled: true,
+            }}
+          />
         </Stack>
       </HabitsProvider>
     </ThemeProvider>
