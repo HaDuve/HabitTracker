@@ -1,20 +1,41 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useRef } from "react";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type ScrollView as ScrollViewType,
+} from "react-native";
 
 import { Theme } from "@/constants/Theme";
 import type { Habit } from "@/contexts/HabitsContext";
 import { useHabits } from "@/contexts/HabitsContext";
-import { getCurrentWeekDates } from "@/utils/date";
+import { getLastNDays } from "@/utils/date";
 
 type HabitCardProps = {
   habit: Habit;
 };
 
+const WEEKDAY_SHORT_LOWER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const DAY_ITEM_SIZE = 40;
+const DAY_ITEM_GAP = 14;
+
+function getDayLabel(dateStr: string, indexFromToday: number): string {
+  if (indexFromToday === 0) return "today";
+  const d = new Date(dateStr + "T12:00:00");
+  return WEEKDAY_SHORT_LOWER[d.getDay()] ?? "";
+}
+
 export function HabitCard({ habit }: HabitCardProps) {
   const { toggleDate } = useHabits();
-  const weekDates = getCurrentWeekDates();
-  const datesInWeek = habit.dates.filter((d) => weekDates.includes(d));
-  const completionPct = Math.round((datesInWeek.length / 7) * 100);
+  const last7Dates = getLastNDays(7); // newest -> oldest (today first)
+  const datesInRange = habit.dates.filter((d) => last7Dates.includes(d));
+  const completionPct = Math.round((datesInRange.length / 7) * 100);
+  const displayDates = [...last7Dates].reverse(); // oldest -> newest (today last/rightmost)
+  const daysScrollRef = useRef<ScrollViewType | null>(null);
+  const didAutoScrollRef = useRef(false);
 
   return (
     <View style={styles.card}>
@@ -24,26 +45,68 @@ export function HabitCard({ habit }: HabitCardProps) {
         </Text>
         <Text style={styles.percent}>{completionPct}%</Text>
       </View>
-      <View style={styles.circlesRow}>
-        {weekDates.map((dateStr, i) => {
-          const isDone = habit.dates.includes(dateStr);
-          return (
-            <Pressable
-              key={dateStr}
-              style={({ pressed }) => [
-                styles.circle,
-                isDone ? styles.circleDone : styles.circleInactive,
-                pressed && styles.circlePressed,
-              ]}
-              onPress={() => toggleDate(habit.id, dateStr)}
-            >
-              {isDone ? (
-                <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-              ) : null}
-            </Pressable>
-          );
-        })}
-      </View>
+      <ScrollView
+        ref={daysScrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.daysScrollContent}
+        onContentSizeChange={() => {
+          // Start at "present": rightmost (today). Only once.
+          if (didAutoScrollRef.current) return;
+          didAutoScrollRef.current = true;
+          daysScrollRef.current?.scrollToEnd({ animated: false });
+        }}
+      >
+        <View>
+          <View style={styles.circlesRow}>
+            {displayDates.map((dateStr, idx) => {
+              const isDone = habit.dates.includes(dateStr);
+              const isToday = idx === displayDates.length - 1;
+              const isLast = idx === displayDates.length - 1;
+              return (
+                <Pressable
+                  key={dateStr}
+                  style={({ pressed }) => [
+                    styles.circle,
+                    isDone ? styles.circleDone : styles.circleInactive,
+                    isToday && styles.circleToday,
+                    !isLast && styles.dayItemSpacing,
+                    pressed && styles.circlePressed,
+                  ]}
+                  onPress={() => toggleDate(habit.id, dateStr)}
+                >
+                  {isDone ? (
+                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+          <View style={styles.labelsRow}>
+            {displayDates.map((dateStr, idx) => {
+              const indexFromToday = displayDates.length - 1 - idx;
+              const isToday = indexFromToday === 0;
+              const isLast = idx === displayDates.length - 1;
+              return (
+                <Text
+                  key={dateStr}
+                  style={[
+                    styles.dayLabel,
+                    isToday && styles.dayLabelToday,
+                    !isLast && styles.dayItemSpacing,
+                  ]}
+                  numberOfLines={1}
+                  ellipsizeMode="clip"
+                  adjustsFontSizeToFit={isToday}
+                  minimumFontScale={0.6}
+                >
+                  {getDayLabel(dateStr, indexFromToday)}
+                </Text>
+              );
+            })}
+          </View>
+        </View>
+      </ScrollView>
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: `${completionPct}%` }]} />
       </View>
@@ -78,15 +141,39 @@ const styles = StyleSheet.create({
   },
   circlesRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: Theme.spacing,
+    marginBottom: 6,
   },
   circle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: DAY_ITEM_SIZE,
+    height: DAY_ITEM_SIZE,
+    borderRadius: DAY_ITEM_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
+  },
+  circleToday: {
+    borderWidth: 2,
+    borderColor: Theme.colors.success,
+  },
+  labelsRow: {
+    flexDirection: "row",
+    marginBottom: Theme.spacing,
+  },
+  daysScrollContent: {
+    paddingRight: 2, // avoids last item clipping on iOS
+  },
+  dayItemSpacing: {
+    marginRight: DAY_ITEM_GAP,
+  },
+  dayLabel: {
+    width: DAY_ITEM_SIZE,
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "600",
+    color: Theme.colors.textSecondary,
+  },
+  dayLabelToday: {
+    color: Theme.colors.textPrimary,
+    fontWeight: "800",
   },
   circleDone: {
     backgroundColor: Theme.colors.accent,

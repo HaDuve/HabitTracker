@@ -1,5 +1,12 @@
-import { useCallback, useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Dimensions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { ContributionGraph, PieChart } from "react-native-chart-kit";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -54,6 +61,25 @@ export default function InsightsScreen() {
     if (typeof w === "number" && Number.isFinite(w) && w > 0) {
       setActivityWrapWidth(w);
     }
+  }, []);
+
+  const activityScrollRef = useRef<ScrollView | null>(null);
+  const didAutoScrollActivityRef = useRef(false);
+  const [isLegendVisible, setIsLegendVisible] = useState(true);
+  const legendHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (legendHideTimerRef.current) clearTimeout(legendHideTimerRef.current);
+    };
+  }, []);
+
+  const hideLegendForAWhile = useCallback(() => {
+    setIsLegendVisible(false);
+    if (legendHideTimerRef.current) clearTimeout(legendHideTimerRef.current);
+    legendHideTimerRef.current = setTimeout(() => {
+      setIsLegendVisible(true);
+    }, 3000);
   }, []);
 
   // Activity Map: aggregate all habits' dates -> count per day (entire last year)
@@ -172,11 +198,19 @@ export default function InsightsScreen() {
       <Text style={styles.sectionTitle}>Activity Map</Text>
       <View style={styles.chartWrap} onLayout={onActivityWrapLayout}>
         <ScrollView
+          ref={activityScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           scrollEnabled={activityScrollEnabled}
           contentOffset={activityScrollEnabled ? undefined : { x: 0, y: 0 }}
           nestedScrollEnabled
+          onContentSizeChange={() => {
+            // Start at "present": rightmost (most recent). Only once, and only if scroll is enabled.
+            if (!activityScrollEnabled) return;
+            if (didAutoScrollActivityRef.current) return;
+            didAutoScrollActivityRef.current = true;
+            activityScrollRef.current?.scrollToEnd({ animated: false });
+          }}
           contentContainerStyle={[
             styles.activityScrollContent,
             !activityScrollEnabled && styles.activityScrollContentNoScroll,
@@ -249,30 +283,36 @@ export default function InsightsScreen() {
           </View>
         </ScrollView>
 
-        <View style={styles.activityLegend} pointerEvents="none">
-          <Text style={styles.activityLegendText}>Less</Text>
-          <View style={styles.activityLegendScale}>
-            <View
-              style={[
-                styles.activityLegendSwatch,
-                { backgroundColor: Theme.colors.heatmapEmpty },
-              ]}
-            />
-            <View
-              style={[
-                styles.activityLegendSwatch,
-                { backgroundColor: Theme.colors.heatmapLow },
-              ]}
-            />
-            <View
-              style={[
-                styles.activityLegendSwatch,
-                { backgroundColor: Theme.colors.heatmapHigh },
-              ]}
-            />
-          </View>
-          <Text style={styles.activityLegendText}>More</Text>
-        </View>
+        {isLegendVisible ? (
+          <Pressable
+            style={styles.activityLegend}
+            onPress={hideLegendForAWhile}
+            onHoverIn={hideLegendForAWhile}
+          >
+            <Text style={styles.activityLegendText}>Less</Text>
+            <View style={styles.activityLegendScale}>
+              <View
+                style={[
+                  styles.activityLegendSwatch,
+                  { backgroundColor: Theme.colors.heatmapEmpty },
+                ]}
+              />
+              <View
+                style={[
+                  styles.activityLegendSwatch,
+                  { backgroundColor: Theme.colors.heatmapLow },
+                ]}
+              />
+              <View
+                style={[
+                  styles.activityLegendSwatch,
+                  { backgroundColor: Theme.colors.heatmapHigh },
+                ]}
+              />
+            </View>
+            <Text style={styles.activityLegendText}>More</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <Text style={styles.sectionTitle}>Weekly Focus</Text>
