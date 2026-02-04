@@ -36,4 +36,4 @@ export const Theme = {
     habitName: { fontSize: 18, fontWeight: "700" as const },
     mono: { fontSize: 14 },
   },
-};
+} as const;

@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FAB } from "@/components/FAB";
 import { HabitCard } from "@/components/HabitCard";
+import { MAX_CONTENT_WIDTH } from "@/constants/Layout";
 import { Theme } from "@/constants/Theme";
 import { useHabits } from "@/contexts/HabitsContext";
 import { formatDisplayDate, getTodayISODate } from "@/utils/date";
@@ -14,21 +15,37 @@ export default function DashboardScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Text style={styles.date}>{todayLabel}</Text>
-        <Text style={styles.heading}>Your Habits</Text>
-      </View>
       {habits.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>No habits yet</Text>
-          <Text style={styles.emptySubtext}>Tap + to add your first habit</Text>
+        <View style={styles.centered}>
+          <View style={styles.header}>
+            <Text style={styles.date}>{todayLabel}</Text>
+            <Text style={styles.heading}>Your Habits</Text>
+          </View>
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>No habits yet</Text>
+            <Text style={styles.emptySubtext}>
+              Tap + to add your first habit
+            </Text>
+          </View>
         </View>
       ) : (
         <FlatList
           data={habits}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <HabitCard habit={item} />}
-          contentContainerStyle={[styles.list, { paddingBottom: 80 }]}
+          renderItem={({ item }) => (
+            <View style={styles.centered}>
+              <HabitCard habit={item} />
+            </View>
+          )}
+          ListHeaderComponent={
+            <View style={styles.centered}>
+              <View style={styles.header}>
+                <Text style={styles.date}>{todayLabel}</Text>
+                <Text style={styles.heading}>Your Habits</Text>
+              </View>
+            </View>
+          }
+          contentContainerStyle={{ paddingBottom: 80 }}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       )}
@@ -42,8 +59,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Theme.colors.background,
   },
-  header: {
+  centered: {
+    width: "100%",
+    maxWidth: MAX_CONTENT_WIDTH,
+    alignSelf: "center",
     paddingHorizontal: Theme.spacing,
+  },
+  header: {
     paddingTop: Theme.spacing,
     paddingBottom: Theme.spacing,
   },
@@ -56,9 +78,6 @@ const styles = StyleSheet.create({
     ...Theme.typography.heading,
     color: Theme.colors.textPrimary,
   },
-  list: {
-    paddingHorizontal: Theme.spacing,
-  },
   separator: {
     height: Theme.spacing,
   },
@@ -66,7 +85,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: Theme.spacing,
   },
   emptyText: {
     ...Theme.typography.habitName,
