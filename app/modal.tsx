@@ -1,18 +1,61 @@
-import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { Theme } from "@/constants/Theme";
+import { useHabits } from "@/contexts/HabitsContext";
 
-export default function ModalScreen() {
+export default function AddHabitModal() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { addHabit } = useHabits();
+  const [name, setName] = useState("");
+
+  const handleSave = () => {
+    const trimmed = name.trim();
+    if (trimmed) {
+      addHabit(trimmed);
+      router.back();
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Modal</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/modal.tsx" />
-
-      {/* Use a light status bar on iOS to account for the black space above the modal */}
-      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+    <View
+      style={[
+        styles.container,
+        { paddingBottom: insets.bottom + Theme.spacing },
+      ]}
+    >
+      <View style={styles.sheet}>
+        <Text style={styles.title}>New Habit</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Habit name"
+          placeholderTextColor={Theme.colors.textSecondary}
+          value={name}
+          onChangeText={setName}
+          autoFocus
+        />
+        <Pressable
+          style={({ pressed }) => [
+            styles.saveBtn,
+            pressed && styles.saveBtnPressed,
+          ]}
+          onPress={handleSave}
+        >
+          <Text style={styles.saveBtnText}>Save</Text>
+        </Pressable>
+      </View>
+      <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />
     </View>
   );
 }
@@ -20,16 +63,46 @@ export default function ModalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: Theme.colors.background,
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: Theme.colors.card,
+    borderTopLeftRadius: Theme.radius.card,
+    borderTopRightRadius: Theme.radius.card,
+    padding: Theme.spacing,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: Theme.colors.cardBorder,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...Theme.typography.heading,
+    color: Theme.colors.textPrimary,
+    marginBottom: Theme.spacing,
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  input: {
+    borderWidth: 1,
+    borderColor: Theme.colors.cardBorder,
+    borderRadius: 12,
+    paddingHorizontal: Theme.spacing,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: Theme.colors.textPrimary,
+    marginBottom: Theme.spacing,
+  },
+  saveBtn: {
+    backgroundColor: Theme.colors.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: Theme.radius.button,
+    alignItems: "center",
+  },
+  saveBtnPressed: {
+    opacity: 0.8,
+  },
+  saveBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
