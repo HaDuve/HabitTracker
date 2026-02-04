@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ContributionGraph, PieChart } from "react-native-chart-kit";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,7 +46,7 @@ export default function InsightsScreen() {
   const contentWidth = Math.min(screenWidth, MAX_CONTENT_WIDTH);
   const availableWidth = Math.max(1, contentWidth - Theme.spacing * 2);
   const [activityWrapWidth, setActivityWrapWidth] = useState<number | null>(
-    null,
+    null
   );
 
   const onActivityWrapLayout = useCallback((e: any) => {
@@ -78,7 +78,7 @@ export default function InsightsScreen() {
     activityViewportWidth -
       (ACTIVITY_SCROLL_PAD_LEFT +
         ACTIVITY_SCROLL_PAD_RIGHT +
-        ACTIVITY_MAP_DAY_LABEL_COL_WIDTH),
+        ACTIVITY_MAP_DAY_LABEL_COL_WIDTH)
   );
   const activityScrollEnabled = chartWidth > activityGraphViewportWidth;
   const activityGraphWidth = activityScrollEnabled
@@ -170,7 +170,7 @@ export default function InsightsScreen() {
       contentContainerStyle={[styles.content, styles.centered]}
     >
       <Text style={styles.sectionTitle}>Activity Map</Text>
-      <View style={styles.chartWrap}>
+      <View style={styles.chartWrap} onLayout={onActivityWrapLayout}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -372,15 +372,15 @@ const styles = StyleSheet.create({
     zIndex: 3,
   },
   activityScrollContent: {
-    paddingRight: Math.max(0, Theme.spacing - 48),
+    paddingRight: ACTIVITY_SCROLL_CONTENT_PAD_RIGHT,
   },
   activityScrollContentNoScroll: {
     // Ensure web doesn't keep a residual horizontal scroll range.
     overflow: "hidden",
   },
   activityScrollableBlock: {
-    paddingLeft: Theme.spacing * 0.75,
-    paddingRight: Math.max(0, Theme.spacing * 0.5 - 48),
+    paddingLeft: ACTIVITY_SCROLL_PAD_LEFT,
+    paddingRight: ACTIVITY_SCROLL_PAD_RIGHT,
   },
   activityMonthRow: {
     flexDirection: "row",
