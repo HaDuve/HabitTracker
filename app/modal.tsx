@@ -2,6 +2,8 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
+  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -24,12 +26,15 @@ export default function AddHabitModal() {
     const trimmed = name.trim();
     if (trimmed) {
       addHabit(trimmed);
+      Keyboard.dismiss();
       router.back();
     }
   };
 
   return (
-    <View
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "padding"}
+      keyboardVerticalOffset={0}
       style={[
         styles.container,
         {
@@ -66,7 +71,7 @@ export default function AddHabitModal() {
         </Pressable>
       </View>
       <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

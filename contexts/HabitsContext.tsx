@@ -20,7 +20,8 @@ type State = { habits: Habit[] };
 type Action =
   | { type: "SET_HABITS"; payload: Habit[] }
   | { type: "ADD_HABIT"; payload: { name: string } }
-  | { type: "TOGGLE_DATE"; payload: { habitId: string; date: string } };
+  | { type: "TOGGLE_DATE"; payload: { habitId: string; date: string } }
+  | { type: "REMOVE_HABIT"; payload: { habitId: string } };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -47,6 +48,10 @@ function reducer(state: State, action: Action): State {
         }),
       };
     }
+    case "REMOVE_HABIT":
+      return {
+        habits: state.habits.filter((h) => h.id !== action.payload.habitId),
+      };
     default:
       return state;
   }
@@ -57,6 +62,7 @@ type ContextValue = {
   dispatch: React.Dispatch<Action>;
   addHabit: (name: string) => void;
   toggleDate: (habitId: string, date: string) => void;
+  removeHabit: (habitId: string) => void;
 };
 
 const HabitsContext = createContext<ContextValue | null>(null);
@@ -95,11 +101,16 @@ export function HabitsProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "TOGGLE_DATE", payload: { habitId, date } });
   }, []);
 
+  const removeHabit = useCallback((habitId: string) => {
+    dispatch({ type: "REMOVE_HABIT", payload: { habitId } });
+  }, []);
+
   const value: ContextValue = {
     habits: state.habits,
     dispatch,
     addHabit,
     toggleDate,
+    removeHabit,
   };
 
   return (

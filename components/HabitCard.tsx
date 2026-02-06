@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRef } from "react";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,7 +30,7 @@ function getDayLabel(dateStr: string, indexFromToday: number): string {
 }
 
 export function HabitCard({ habit }: HabitCardProps) {
-  const { toggleDate } = useHabits();
+  const { toggleDate, removeHabit } = useHabits();
   const last7Dates = getLastNDays(7); // newest -> oldest (today first)
   const datesInRange = habit.dates.filter((d) => last7Dates.includes(d));
   const completionPct = Math.round((datesInRange.length / 7) * 100);
@@ -37,8 +38,25 @@ export function HabitCard({ habit }: HabitCardProps) {
   const daysScrollRef = useRef<ScrollViewType | null>(null);
   const didAutoScrollRef = useRef(false);
 
+  const handleLongPress = () => {
+    Alert.alert("Delete habit?", `Remove "${habit.name}"?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => removeHabit(habit.id),
+      },
+    ]);
+  };
+
   return (
-    <View style={styles.card}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.card,
+        pressed && { transform: [{ scale: 0.85 }] },
+      ]}
+      onLongPress={handleLongPress}
+    >
       <View style={styles.topRow}>
         <Text style={styles.habitName} numberOfLines={1}>
           {habit.name}
@@ -110,7 +128,7 @@ export function HabitCard({ habit }: HabitCardProps) {
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: `${completionPct}%` }]} />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
